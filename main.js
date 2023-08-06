@@ -15,7 +15,6 @@ Todo
 - Save video titles and urls to json file
 
 
-
 */
 
 
@@ -56,6 +55,7 @@ const setupBrowser = async () => {
 const playlistLength = async (page) => {
   const lengthOfPlaylist = await page.evaluate(() => {
     const totalVideos = document.querySelectorAll('div.metadata-stats > yt-formatted-string ');//.style-scope.yt-formatted-string');
+    
     let totalVideosText = totalVideos[0].innerText.split(' ');
     console.log('totalVideos', Number(totalVideosText[0]))
 
@@ -64,12 +64,14 @@ const playlistLength = async (page) => {
 
     return Number(totalVideosText[0]);
   });
+
   return lengthOfPlaylist;
 }
 
 const extractItems = () => {
   const extractedElements = document.querySelectorAll('ytd-playlist-video-renderer');
   const items = [];
+
   for (let element of extractedElements) {
     items.push(element.innerText);
     // items.push({
@@ -89,8 +91,10 @@ async function scrapeInfiniteScrollItems(
   scrollDelay = 1000,
 ) {
   let items = [];
+
   try {
     let previousHeight;
+
     while (items.length < itemTargetCount) {
       items = await page.evaluate(extractItems);
       previousHeight = await page.evaluate('document.body.scrollHeight');
@@ -99,6 +103,7 @@ async function scrapeInfiniteScrollItems(
       await page.waitFor(scrollDelay);
     }
   } catch(e) { }
+
   return items;
 }
 
@@ -120,10 +125,10 @@ const run = async () => {
   fs.writeFileSync('./items.txt', items.join('\n') + '\n');
 
   // Pause to see what's going on.
-  await new Promise(r => setTimeout(r, 600000));
+  await new Promise(r => setTimeout(r, 60000));
 
   // Turn off the browser to clean up after ourselves.
   await browser.close();
-  }
+}
 
 run()
