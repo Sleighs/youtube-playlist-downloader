@@ -36,14 +36,14 @@ const setupBrowser = async () => {
   const browser = await puppeteer.launch({ headless: false });
 
   const page = await browser.newPage();
-  await page.setDefaultNavigationTimeout(0); 
+  page.setDefaultNavigationTimeout(0); 
   await page.setViewport({ width: 1280, height: 1080 });
 
   page.on('console', async (msg) => {
     const msgArgs = msg.args();
-    for (let i = 0; i < msgArgs.length; ++i) {
+    for (let i = 0; i < msgArgs.length; i++) {
       try {
-        console.log(await msgArgs[i].jsonValue());
+        console.log(await msgArgs[i]?.jsonValue());
       } catch(e) {
         console.log(e);
       }
@@ -53,11 +53,31 @@ const setupBrowser = async () => {
   return [browser, page]
 }
 
-function extractItems() {
+const playlistLength = async (page) => {
+  const lengthOfPlaylist = await page.evaluate(() => {
+    const totalVideos = document.querySelectorAll('div.metadata-stats > yt-formatted-string ');//.style-scope.yt-formatted-string');
+    let totalVideosText = totalVideos[0].innerText.split(' ');
+    console.log('totalVideos', Number(totalVideosText[0]))
+
+    //const playlistItems = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
+    //console.log('playlistItems', playlistItems.length)
+
+    return Number(totalVideosText[0]);
+  });
+  return lengthOfPlaylist;
+}
+
+const extractItems = () => {
   const extractedElements = document.querySelectorAll('ytd-playlist-video-renderer');
   const items = [];
   for (let element of extractedElements) {
     items.push(element.innerText);
+    // items.push({
+    //   title: element.querySelector('h3').innerText,
+    //   url: element.querySelector('a').href,
+    //   channel: element.querySelector('ytd-channel-name').innerText,
+    // })
+    //console.log('innerText', element.innerText)
   }
   return items;
 }
@@ -89,21 +109,18 @@ const run = async () => {
 
   await page.goto(playlist);
 
+  await page.waitForSelector('div.metadata-stats > yt-formatted-string');
+
+  const lengthOfPlaylist = await playlistLength(page);
+
   // Scroll and extract items from page
   const items = await scrapeInfiniteScrollItems(page, extractItems, 1000);
 
   // Save extracted items to a file.
   fs.writeFileSync('./items.txt', items.join('\n') + '\n');
 
-  // await page.waitForSelector('ytd-playlist-video-renderer');
-  // await page.evaluate(() => {
-  //   const playlistItems = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
-
-  //   return console.log('playlist items', playlistItems);
-  // });
-
-  // Pause, to see what's going on.
-  //await new Promise(r => setTimeout(r, 15000));
+  // Pause to see what's going on.
+  await new Promise(r => setTimeout(r, 600000));
 
   // Turn off the browser to clean up after ourselves.
   await browser.close();
