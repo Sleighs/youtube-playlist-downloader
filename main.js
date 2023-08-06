@@ -8,7 +8,16 @@ https://blog.apify.com/puppeteer-web-scraping-tutorial/
 
 https://intoli.com/blog/scrape-infinite-scroll/
 
+
+Todo
+- Get list length
+- Auto scroll to bottom of page
+- Save video titles and urls to json file
+
+
+
 */
+
 
 const fs = require("fs");
 const puppeteer = require("puppeteer");
@@ -28,7 +37,7 @@ const setupBrowser = async () => {
 
   const page = await browser.newPage();
   await page.setDefaultNavigationTimeout(0); 
-  await page.setViewport({ width: 1024, height: 1080 });
+  await page.setViewport({ width: 1280, height: 1080 });
 
   page.on('console', async (msg) => {
     const msgArgs = msg.args();
@@ -44,6 +53,35 @@ const setupBrowser = async () => {
   return [browser, page]
 }
 
+function extractItems() {
+  const extractedElements = document.querySelectorAll('ytd-playlist-video-renderer');
+  const items = [];
+  for (let element of extractedElements) {
+    items.push(element.innerText);
+  }
+  return items;
+}
+
+async function scrapeInfiniteScrollItems(
+  page,
+  extractItems,
+  itemTargetCount,
+  scrollDelay = 1000,
+) {
+  let items = [];
+  try {
+    let previousHeight;
+    while (items.length < itemTargetCount) {
+      items = await page.evaluate(extractItems);
+      previousHeight = await page.evaluate('document.body.scrollHeight');
+      await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+      await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`);
+      await page.waitFor(scrollDelay);
+    }
+  } catch(e) { }
+  return items;
+}
+
 const run = async () => {
   const [browser, page] = await setupBrowser();
 
@@ -51,18 +89,21 @@ const run = async () => {
 
   await page.goto(playlist);
 
-  await page.waitForSelector('ytd-playlist-video-renderer');
+  // Scroll and extract items from page
+  const items = await scrapeInfiniteScrollItems(page, extractItems, 1000);
 
-  
-  
-  await page.evaluate(() => {
-    const playlistItems = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
+  // Save extracted items to a file.
+  fs.writeFileSync('./items.txt', items.join('\n') + '\n');
 
-    return console.log('playlist items', playlistItems);
-  });
+  // await page.waitForSelector('ytd-playlist-video-renderer');
+  // await page.evaluate(() => {
+  //   const playlistItems = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
 
-  // Pause for 10 seconds, to see what's going on.
-  await new Promise(r => setTimeout(r, 15000));
+  //   return console.log('playlist items', playlistItems);
+  // });
+
+  // Pause, to see what's going on.
+  //await new Promise(r => setTimeout(r, 15000));
 
   // Turn off the browser to clean up after ourselves.
   await browser.close();
