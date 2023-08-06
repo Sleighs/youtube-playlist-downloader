@@ -1,6 +1,10 @@
 
 /*
+https://github.com/fent/node-ytdl
 
+https://www.npmjs.com/package/youtube-dl
+
+https://blog.apify.com/puppeteer-web-scraping-tutorial/
 
 */
 
