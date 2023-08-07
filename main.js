@@ -8,6 +8,7 @@ https://blog.apify.com/puppeteer-web-scraping-tutorial/
 
 https://intoli.com/blog/scrape-infinite-scroll/
 
+https://stackoverflow.com/questions/51529332/puppeteer-scroll-down-until-you-cant-anymore
 
 Todo
 - Get list length
@@ -36,7 +37,7 @@ const setupBrowser = async () => {
 
   const page = await browser.newPage();
   page.setDefaultNavigationTimeout(0); 
-  await page.setViewport({ width: 1280, height: 1080 });
+  await page.setViewport({ width: 1280, height: 800 });
 
   page.on('console', async (msg) => {
     const msgArgs = msg.args();
@@ -97,14 +98,53 @@ async function scrapeInfiniteScrollItems(
 
     while (items.length < itemTargetCount) {
       items = await page.evaluate(extractItems);
-      previousHeight = await page.evaluate('document.body.scrollHeight');
-      await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
-      await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`);
+
+      // previousHeight = await page.evaluate('document.body.scrollHeight');
+      // await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+      //await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`);
+
+      previousHeight = await page.evaluate(document.querySelector('yt-app').innerHeight);
+      
+      await page.evaluate(window.scrollTo(0, document.querySelector('yt-app').innerHeight));
+      await page.waitForFunction(`document.body.innerHeight > ${previousHeight}`);
       await page.waitFor(scrollDelay);
+      
     }
   } catch(e) { }
 
   return items;
+}
+
+async function autoScroll(
+  page,
+  extractItems,
+  itemTargetCount
+){
+  let items = [];
+
+  await page.evaluate(async () => {
+      await new Promise((resolve) => {
+          var totalHeight = 0;
+          var distance = 100;
+          var timer = setInterval(() => {
+              var scrollHeight = document.body.scrollHeight;
+              window.scrollBy(0, distance);
+              totalHeight += distance;
+
+              if(totalHeight >= scrollHeight - window.innerHeight){
+                  clearInterval(timer);
+                  resolve();
+              }
+          }, 100);
+      });
+  });
+
+  while (items.length < itemTargetCount) {
+    items = await page.evaluate(extractItems);
+  }
+
+  console.log('items length', items.length)
+  return items
 }
 
 const run = async () => {
@@ -119,13 +159,15 @@ const run = async () => {
   const lengthOfPlaylist = await playlistLength(page);
 
   // Scroll and extract items from page
-  const items = await scrapeInfiniteScrollItems(page, extractItems, 1000);
+  //const items = await scrapeInfiniteScrollItems(page, extractItems, lengthOfPlaylist);
+
+  const items = await autoScroll(page, extractItems, lengthOfPlaylist); 
 
   // Save extracted items to a file.
   fs.writeFileSync('./items.txt', items.join('\n') + '\n');
 
   // Pause to see what's going on.
-  await new Promise(r => setTimeout(r, 60000));
+  await new Promise(r => setTimeout(r, 600000));
 
   // Turn off the browser to clean up after ourselves.
   await browser.close();
