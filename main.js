@@ -8,6 +8,9 @@ https://blog.apify.com/puppeteer-web-scraping-tutorial/
 
 https://intoli.com/blog/scrape-infinite-scroll/
 
+https://stackoverflow.com/questions/51529332/puppeteer-scroll-down-until-you-cant-anymore
+
+
 
 Todo
 - Get list length
@@ -57,10 +60,7 @@ const playlistLength = async (page) => {
     const totalVideos = document.querySelectorAll('div.metadata-stats > yt-formatted-string ');//.style-scope.yt-formatted-string');
     
     let totalVideosText = totalVideos[0].innerText.split(' ');
-    console.log('totalVideos', Number(totalVideosText[0]))
-
-    //const playlistItems = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
-    //console.log('playlistItems', playlistItems.length)
+    console.log('totalVideos', Number(totalVideosText[0]));
 
     return Number(totalVideosText[0]);
   });
@@ -107,6 +107,42 @@ async function scrapeInfiniteScrollItems(
   return items;
 }
 
+async function autoScroll(
+  page, 
+  extractItems,
+  itemTargetCount = 171,
+  maxScrolls
+){
+  let items = [];
+
+  await page.evaluate(async (maxScrolls) => {
+    await new Promise((resolve) => {
+      var totalHeight = 0;
+      var distance = 100;
+      var scrolls = 0;  // scrolls counter
+      var timer = setInterval(() => {
+        var scrollHeight = document.body.scrollHeight;
+        window.scrollBy(0, distance);
+        totalHeight += distance;
+        scrolls++;  // increment counter
+
+        // stop scrolling if reached the end or the maximum number of scrolls
+        if(totalHeight >= scrollHeight - window.innerHeight || scrolls >= maxScrolls){
+          clearInterval(timer);
+          resolve();
+        }
+      }, 100);
+    });
+
+    // while (items.length < itemTargetCount) {
+    //   items = await page.evaluate(extractItems);
+    //   console.log('items.length', items.length)
+    // }
+  }, maxScrolls);  // pass maxScrolls to the function
+
+  return items
+}
+
 const run = async () => {
   const [browser, page] = await setupBrowser();
 
@@ -119,7 +155,8 @@ const run = async () => {
   const lengthOfPlaylist = await playlistLength(page);
 
   // Scroll and extract items from page
-  const items = await scrapeInfiniteScrollItems(page, extractItems, 1000);
+  //const items = await scrapeInfiniteScrollItems(page, extractItems, 1000);
+  const items = await autoScroll(page, extractItems, lengthOfPlaylist, 2000);
 
   // Save extracted items to a file.
   fs.writeFileSync('./items.txt', items.join('\n') + '\n');
