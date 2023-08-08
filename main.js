@@ -29,8 +29,6 @@ const puppeteer = require("puppeteer");
 
 const playlist = 'https://www.youtube.com/playlist?list=PL8xvCGHIJPU__F_pFHbYujfin-vyRIJXu';//"https://www.youtube.com/playlist?list=PL8xvCGHIJPU8z9itQiCZbAjQK_V2SPKIn";
 
-let items = [];
-
 // const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'))
 
 // let locations = JSON.parse(fs.readFileSync('./locations.json', 'utf-8'))
@@ -136,54 +134,14 @@ const scrollToBottom = async (
         scrolls++;  // increment counter
 
         // Stop scrolling if reached the end or the maximum number of scrolls
-        if(totalHeight >= scrollHeight - window.innerHeight || scrolls >= maxScrolls){
-          clearInterval(timer);
-          resolve();
+        if (totalHeight >= scrollHeight - window.innerHeight || scrolls >= maxScrolls){
+          //clearInterval(timer);
+          //resolve();
         }
       }, 100);
     });
   }, maxScrolls);  // pass maxScrolls to the function
 }
-
-
-// const searchString = "java course";
-
-// const requestParams = {
-//   baseURL: `https://www.youtube.com`,
-//   encodedQuery: encodeURI(searchString),                            // what we want to search for in URI encoding
-// };
-
-// async function fillPlaylistsDataFromPage(page) {
-//   const dataFromPage = await page.evaluate((requestParams) => {
-//     const mixes = Array.from(document.querySelectorAll("#contents > ytd-radio-renderer")).map((el) => ({
-//       title: el.querySelector("a > h3 > #video-title")?.textContent.trim(),
-//       link: `${requestParams.baseURL}${el.querySelector("a#thumbnail")?.getAttribute("href")}`,
-//       videos: Array.from(el.querySelectorAll("ytd-child-video-renderer a")).map((el) => ({
-//         title: el.querySelector("#video-title")?.textContent.trim(),
-//         link: `${requestParams.baseURL}${el.getAttribute("href")}`,
-//         length: el.querySelector("#length")?.textContent.trim(),
-//       })),
-//       thumbnail: el.querySelector("a#thumbnail #img")?.getAttribute("src"),
-//     }));
-//     const playlists = Array.from(document.querySelectorAll("#contents > ytd-playlist-renderer")).map((el) => ({
-//       title: el.querySelector("a > h3 > #video-title")?.textContent.trim(),
-//       link: `${requestParams.baseURL}${el.querySelector("a#thumbnail")?.getAttribute("href")}`,
-//       channel: {
-//         name: el.querySelector("#channel-name a")?.textContent.trim(),
-//         link: `${requestParams.baseURL}${el.querySelector("#channel-name a")?.getAttribute("href")}`,
-//       },
-//       videoCount: el.querySelector("yt-formatted-string.ytd-thumbnail-overlay-side-panel-renderer")?.textContent.trim(),
-//       videos: Array.from(el.querySelectorAll("ytd-child-video-renderer a")).map((el) => ({
-//         title: el.querySelector("#video-title")?.textContent.trim(),
-//         link: `${requestParams.baseURL}${el.getAttribute("href")}`,
-//         length: el.querySelector("#length")?.textContent.trim(),
-//       })),
-//       thumbnail: el.querySelector("a#thumbnail #img")?.getAttribute("src"),
-//     }));
-//     return [...mixes, ...playlists];
-//   }, requestParams);
-//   return dataFromPage;
-// }
 
 
 const run = async () => {
@@ -198,15 +156,10 @@ const run = async () => {
   // Scroll to bottom
   await scrollToBottom(page, 1000);
   
-  //const lengthOfPlaylist = await playlistLength(page);
-
-
   // Extract items from page
   const items = await scrapeInfiniteScrollItems(page, extractItems, 98, 1000);
-  //const items = await autoScroll(page, extractItems, lengthOfPlaylist, 2000);
-  
 
-  console.log('items', items)
+  //console.log('items', items)
 
   // Save extracted items to a file.
   fs.writeFileSync('./items.txt', items.join('\n') + '\n');
