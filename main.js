@@ -1,10 +1,8 @@
 const fs = require("fs");
 const puppeteer = require("puppeteer");
 
-const playlist = 
-//'https://www.youtube.com/playlist?list=PL8xvCGHIJPU9KiRLDBibP-ytb0yBGBcx0';
-'https://www.youtube.com/playlist?list=PL8xvCGHIJPU__F_pFHbYujfin-vyRIJXu';
 
+const playlistURL = 'https://www.youtube.com/playlist?list=PL8xvCGHIJPU__F_pFHbYujfin-vyRIJXu';
 
 function timeout(miliseconds) {
   return new Promise(resolve => setTimeout(resolve, miliseconds));
@@ -124,7 +122,7 @@ const run = async () => {
 
   //console.log("Logging in...");
 
-  await page.goto(playlist);
+  await page.goto(playlistURL);
 
   await page.waitForSelector('div.metadata-stats > yt-formatted-string');
 
