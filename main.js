@@ -23,8 +23,13 @@ Todo
 
 const fs = require("fs");
 const puppeteer = require("puppeteer");
+// const puppeteer = require("puppeteer-extra");
+// const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+//puppeteer.use(StealthPlugin())
 
 const playlist = 'https://www.youtube.com/playlist?list=PL8xvCGHIJPU__F_pFHbYujfin-vyRIJXu';//"https://www.youtube.com/playlist?list=PL8xvCGHIJPU8z9itQiCZbAjQK_V2SPKIn";
+
+let items = [];
 
 // const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'))
 
@@ -68,6 +73,14 @@ const playlistLength = async (page) => {
   return lengthOfPlaylist;
 }
 
+const pageHeight = async (page) => {
+  const height = await page.evaluate(() => {
+    return document.body.scrollHeight;
+  });
+
+  return height;
+}
+
 const extractItems = () => {
   const extractedElements = document.querySelectorAll('ytd-playlist-video-renderer');
   const items = [];
@@ -97,24 +110,20 @@ async function scrapeInfiniteScrollItems(
 
     while (items.length < itemTargetCount) {
       items = await page.evaluate(extractItems);
-      previousHeight = await page.evaluate('document.body.scrollHeight');
-      await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
-      await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`);
-      await page.waitFor(scrollDelay);
+      // previousHeight = await page.evaluate('document.body.scrollHeight');
+      // await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+      // await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`);
+      // await page.waitFor(scrollDelay);
     }
   } catch(e) { }
 
   return items;
 }
 
-async function autoScroll(
+const scrollToBottom = async (
   page, 
-  extractItems,
-  itemTargetCount = 171,
   maxScrolls
-){
-  let items = [];
-
+) => {
   await page.evaluate(async (maxScrolls) => {
     await new Promise((resolve) => {
       var totalHeight = 0;
@@ -126,22 +135,56 @@ async function autoScroll(
         totalHeight += distance;
         scrolls++;  // increment counter
 
-        // stop scrolling if reached the end or the maximum number of scrolls
+        // Stop scrolling if reached the end or the maximum number of scrolls
         if(totalHeight >= scrollHeight - window.innerHeight || scrolls >= maxScrolls){
           clearInterval(timer);
           resolve();
         }
       }, 100);
     });
-
-    // while (items.length < itemTargetCount) {
-    //   items = await page.evaluate(extractItems);
-    //   console.log('items.length', items.length)
-    // }
   }, maxScrolls);  // pass maxScrolls to the function
-
-  return items
 }
+
+
+// const searchString = "java course";
+
+// const requestParams = {
+//   baseURL: `https://www.youtube.com`,
+//   encodedQuery: encodeURI(searchString),                            // what we want to search for in URI encoding
+// };
+
+// async function fillPlaylistsDataFromPage(page) {
+//   const dataFromPage = await page.evaluate((requestParams) => {
+//     const mixes = Array.from(document.querySelectorAll("#contents > ytd-radio-renderer")).map((el) => ({
+//       title: el.querySelector("a > h3 > #video-title")?.textContent.trim(),
+//       link: `${requestParams.baseURL}${el.querySelector("a#thumbnail")?.getAttribute("href")}`,
+//       videos: Array.from(el.querySelectorAll("ytd-child-video-renderer a")).map((el) => ({
+//         title: el.querySelector("#video-title")?.textContent.trim(),
+//         link: `${requestParams.baseURL}${el.getAttribute("href")}`,
+//         length: el.querySelector("#length")?.textContent.trim(),
+//       })),
+//       thumbnail: el.querySelector("a#thumbnail #img")?.getAttribute("src"),
+//     }));
+//     const playlists = Array.from(document.querySelectorAll("#contents > ytd-playlist-renderer")).map((el) => ({
+//       title: el.querySelector("a > h3 > #video-title")?.textContent.trim(),
+//       link: `${requestParams.baseURL}${el.querySelector("a#thumbnail")?.getAttribute("href")}`,
+//       channel: {
+//         name: el.querySelector("#channel-name a")?.textContent.trim(),
+//         link: `${requestParams.baseURL}${el.querySelector("#channel-name a")?.getAttribute("href")}`,
+//       },
+//       videoCount: el.querySelector("yt-formatted-string.ytd-thumbnail-overlay-side-panel-renderer")?.textContent.trim(),
+//       videos: Array.from(el.querySelectorAll("ytd-child-video-renderer a")).map((el) => ({
+//         title: el.querySelector("#video-title")?.textContent.trim(),
+//         link: `${requestParams.baseURL}${el.getAttribute("href")}`,
+//         length: el.querySelector("#length")?.textContent.trim(),
+//       })),
+//       thumbnail: el.querySelector("a#thumbnail #img")?.getAttribute("src"),
+//     }));
+//     return [...mixes, ...playlists];
+//   }, requestParams);
+//   return dataFromPage;
+// }
+
 
 const run = async () => {
   const [browser, page] = await setupBrowser();
@@ -152,11 +195,18 @@ const run = async () => {
 
   await page.waitForSelector('div.metadata-stats > yt-formatted-string');
 
-  const lengthOfPlaylist = await playlistLength(page);
+  // Scroll to bottom
+  await scrollToBottom(page, 1000);
+  
+  //const lengthOfPlaylist = await playlistLength(page);
 
-  // Scroll and extract items from page
-  //const items = await scrapeInfiniteScrollItems(page, extractItems, 1000);
-  const items = await autoScroll(page, extractItems, lengthOfPlaylist, 2000);
+
+  // Extract items from page
+  const items = await scrapeInfiniteScrollItems(page, extractItems, 98, 1000);
+  //const items = await autoScroll(page, extractItems, lengthOfPlaylist, 2000);
+  
+
+  console.log('items', items)
 
   // Save extracted items to a file.
   fs.writeFileSync('./items.txt', items.join('\n') + '\n');
@@ -167,5 +217,6 @@ const run = async () => {
   // Turn off the browser to clean up after ourselves.
   await browser.close();
 }
+
 
 run()
