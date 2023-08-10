@@ -106,11 +106,11 @@ const scrollToBottom = async (
           || 
           scrolls >= maxScrolls
         ){
-          console.log('heights', {
-            totalHeight, 
-            scrollHeight, 
-            innerHeight: window.innerHeight
-          });
+          // console.log('heights', {
+          //   totalHeight, 
+          //   scrollHeight, 
+          //   innerHeight: window.innerHeight
+          // });
           clearInterval(timer);
           resolve();
         }

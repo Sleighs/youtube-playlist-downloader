@@ -2,6 +2,7 @@
   "dependencies": {
     "puppeteer": "^21.0.1",
     "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "youtube-mp3-downloader": "^0.7.11"
   }
 }
