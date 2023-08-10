@@ -15,8 +15,8 @@ var Downloader = function() {
     // });
 
     self.YD = new YoutubeMp3Downloader({
-        "ffmpegPath": "/usr/bin/ffmpeg",        // FFmpeg binary location
-        "outputPath": "/Users/samuelwright/Music",    // Output file location (default: the home directory)
+        "ffmpegPath": "/Program Files/ffmpeg/bin",        // FFmpeg binary locatioN //C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\ffmpeg.exe
+        "outputPath": "./downloads",    // Output file location (default: the home directory)
         "youtubeVideoQuality": "highestaudio",  // Desired video quality (default: highestaudio)
         "queueParallelism": 2,                  // Download parallelism (default: 1)
         "progressTimeout": 2000,                 // Interval in ms for the progress reports (default: 1000)
@@ -50,6 +50,8 @@ var Downloader = function() {
 };
 
 Downloader.prototype.getMP3 = function(track, callback){
+
+    console.log("Downloading: " + track.name)
 
     var self = this;
 	
