@@ -13,7 +13,7 @@ const setupBrowser = async () => {
 
   const page = await browser.newPage();
   page.setDefaultNavigationTimeout(0); 
-  await page.setViewport({ width: 800, height: 1080 });
+  await page.setViewport({ width: 800, height: 600 });
 
   page.on('console', async (msg) => {
     const msgArgs = msg.args();
