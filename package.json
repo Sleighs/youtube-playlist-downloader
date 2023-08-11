@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "ffmpeg": "^0.0.4",
     "puppeteer": "^21.0.1",
     "youtube-exec": "^1.0.4",
     "youtube-mp3-downloader": "^0.7.11",
