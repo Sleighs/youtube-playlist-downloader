@@ -152,29 +152,31 @@ const run = async () => {
 
 
 async function main() {
-  let songURL = 'https://www.youtube.com/watch?v=MV_3Dpw-BRY';
-
-  // let info = await ytdl.getInfo(songURL);
-  // let format = ytdl.chooseFormat(info.formats, { quality: '134' });
-  // console.log('Format found!', format);
+  let songURL = 'https://www.youtube.com/watch?v=MV_3Dpw-BRY';//https://www.youtube.com/watch?v=mqoEplBvXkI
 
   let info = await ytdl.getInfo(songURL);
+  // console.log('Format found!', format);
+
+  //fs.writeFileSync('./info.json', JSON.stringify(info, null, 2));
+
   let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+  let formatsAvailable = info.formats.map(format => format.container);
+  let videoFormat = formatsAvailable[0];
+  // let format = { filter: format => format.container === videoFormat }
+
+  console.log('formatsAvailable', formatsAvailable)
+  console.log(info.videoDetails.title)
+  console.log('info', info)
+
   //console.dir(audioFormats);
+  // console.log('info formats', info.formats)
 
   //console.dir(ytdl(songURL))
   //ytdl(songURL)
     //.pipe(fs.createWriteStream('audio.mp3'));
 
-  let formatsAvailable = info.formats.map(format => format.container);
-  console.log('formatsAvailable', formatsAvailable)
-  console.dir(info.videoDetails.title)
-
-  let videoFormat = formatsAvailable[formatsAvailable.length - 1];
-  let format = { filter: format => format.container === videoFormat }
-  
-  ytdl(songURL)
-    .pipe(fs.createWriteStream(`${info.videoDetails.title}.${videoFormat}`));
+  // ytdl(songURL)
+  //   .pipe(fs.createWriteStream(`downloads/mp3s/${info.videoDetails.title}.${videoFormat}`));
 }
 
 main()
