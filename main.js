@@ -1,8 +1,6 @@
 const fs = require("fs");
 const puppeteer = require("puppeteer");
-const Downloader = require("./downloader");
-
-let videoDownloader = new Downloader();
+const ytdl = require('ytdl-core')
 
 const playlistURL = 'https://www.youtube.com/playlist?list=PL8xvCGHIJPU__F_pFHbYujfin-vyRIJXu';
 
@@ -152,66 +150,30 @@ const run = async () => {
 //run()
 
 
+async function main() {
+  let songURL = 'https://www.youtube.com/watch?v=MV_3Dpw-BRY';
 
+  // let info = await ytdl.getInfo(songURL);
+  // let format = ytdl.chooseFormat(info.formats, { quality: '134' });
+  // console.log('Format found!', format);
 
+  let info = await ytdl.getInfo(songURL);
+  let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+  //console.dir(audioFormats);
 
+  //console.dir(ytdl(songURL))
+  //ytdl(songURL)
+    //.pipe(fs.createWriteStream('audio.mp3'));
 
+  let formatsAvailable = info.formats.map(format => format.container);
+  console.log('formatsAvailable', formatsAvailable)
+  console.dir(info.videoDetails.title)
 
+  let videoFormat = formatsAvailable[formatsAvailable.length - 1];
+  let format = { filter: format => format.container === videoFormat }
+  
+  ytdl(songURL)
+    .pipe(fs.createWriteStream(`${info.videoDetails.title}.${videoFormat}`));
+}
 
-// var YoutubeMp3Downloader = require("youtube-mp3-downloader");
-
-// var YD = new YoutubeMp3Downloader({
-//   "ffmpegPath": "/Program Files/ffmpeg/bin",     // FFmpeg binary location
-//   "outputPath": "/Users/user1/Music",       // Output file location (default: the home directory)
-//   "youtubeVideoQuality": "highestaudio",  // Desired video quality (default: highestaudio)
-//   "queueParallelism": 2,                  // Download parallelism (default: 1)
-//   "progressTimeout": 2000,                // Interval in ms for the progress reports (default: 1000)
-//   "allowWebm": false                      // Enable download from WebM sources (default: false)
-// });
-
-// //Download video and save as MP3 file
-// YD.download('UXqdCpIUjfQ');
-
-// YD.on("finished", function(err, data) {
-//   console.log(JSON.stringify(data));
-// });
-
-// YD.on("error", function(error) {
-//   console.log(error);
-// });
-
-// YD.on("progress", function(progress) {
-//   console.log(JSON.stringify(progress));
-// });
-
-
-
-
-
-
-// let testTrack = {
-//   "title": "\"Stompin\" Hey Arnold Ending Theme",
-//   "url": "https://www.youtube.com/watch?v=UXqdCpIUjfQ",
-//   "channel": "Alan Castillo"
-// }
-
-// // Convert track from json to js
-// testTrack = JSON.parse(JSON.stringify(testTrack));
-
-// let testId = 'UXqdCpIUjfQ';
-// var i = 0;
-// // get video id from url
-// const videoId = testTrack.url.split('v=')[1];
-// const videoName = testTrack.title;
-
-// videoDownloader.getMP3({
-//   videoId: testId,
-//   name: testTrack.title, 
-// }, (err,res) => {
-//   i++;
-//   if(err)
-//       throw err;
-//   else{
-//       console.log("Song "+ i + " was downloaded: " + res.file);
-//   }
-// });
+main()
