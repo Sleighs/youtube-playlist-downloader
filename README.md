@@ -1,10 +1,10 @@
-# yt2mp3-webscraper
+# Youtube Playlist Downloader
 
-A node.js webscraper that downloads each track of a youtube playlist in mp3 format using puppeteer and youtube mp3 downloader.
+A node.js web scraper that retrieves the information of each track in a youtube playlist and downloads each track using puppeteer and ytdl-core.
 
 ## Instrutions
 
-1. Make sure you have FFmpeg installed 
+1. Make sure you have FFmpeg installed
 
 To install FFmpeg:
 - Windows using chocolatey - choco install ffmpeg
@@ -17,6 +17,6 @@ Extract zip file or clone
 
 3. Add playlist url 
 
-4. Run scraper
+4. Run script
 
 Run main.js using node main.js
