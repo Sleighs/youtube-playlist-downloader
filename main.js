@@ -106,7 +106,7 @@ const download = async (songURL) => {
   } catch { }
 
   // Save info to json file
-  //fs.writeFileSync('./info.json', JSON.stringify(info, null, 2));
+  fs.writeFileSync('./info.json', JSON.stringify(info, null, 2));
 
   // Get all available formats
   let formatsAvailable = info.formats.map(format => format.container);
