@@ -2,7 +2,8 @@ const fs = require("fs");
 const puppeteer = require("puppeteer");
 const ytdl = require('ytdl-core')
 
-const playlistURL = 'https://www.youtube.com/playlist?list=PL8xvCGHIJPU__F_pFHbYujfin-vyRIJXu'; // Insert playlist URL here
+// Insert public or unlisted playlist URL here
+const playlistURL = 'https://www.youtube.com/playlist?list=PL8xvCGHIJPU8RtRg1jdKg6moH7R1abaMF'
 
 const setupBrowser = async () => {
   const browser = await puppeteer.launch({ headless: false });
@@ -28,7 +29,7 @@ const setupBrowser = async () => {
 const playlistLength = async (page) => {
   const lengthOfPlaylist = await page.evaluate(() => {
     const totalVideos = document.querySelectorAll('ytd-playlist-video-renderer');
-    console.log('totalVideos', totalVideos.length)
+    //console.log('totalVideos', totalVideos.length)
     return totalVideos.length;
   });
 
@@ -54,12 +55,11 @@ const extractItems = () => {
   return items;
 }
 
-async function scrapeInfiniteScrollItems(
+const scrapeInfiniteScrollItems = async (
   page,
   extractItems,
-  itemTargetCount,
-  scrollDelay = 1000,
-) {
+  itemTargetCount
+) => {
   let items = [];
 
   try {
@@ -87,20 +87,62 @@ const scrollToBottom = async (
         scrolls++; 
 
         // Stop scrolling if reached the end or the maximum number of scrolls
-        if (
-          totalHeight >= scrollHeight + (window.innerHeight * 5) || scrolls >= maxScrolls
-        ){
-          // console.log('heights', {
-          //   totalHeight, 
-          //   scrollHeight, 
-          //   innerHeight: window.innerHeight
-          // });
+        if (totalHeight >= scrollHeight + (window.innerHeight * 5) || scrolls >= maxScrolls){
           clearInterval(timer);
           resolve();
         }
       }, 100);
     });
-  }, maxScrolls);  // Pass maxScrolls to the function
+  }, maxScrolls);  
+}
+
+const download = async (songURL) => {
+  let info;
+
+  // Get video info
+  try {
+    info = await ytdl.getInfo(songURL);
+    //console.log('info', info)
+  } catch { }
+
+  // Save info to json file
+  //fs.writeFileSync('./info.json', JSON.stringify(info, null, 2));
+
+  // Get all available formats
+  let formatsAvailable = info.formats.map(format => format.container);
+
+  // Filter audio formats
+  let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+  let audioFormatsAvailable = audioFormats.map(format => format.container);
+
+  // Get the highest quality audio format
+  let audioFormat = audioFormatsAvailable[0];
+  let videoFormat = formatsAvailable[0];
+
+  // Get video title
+  let videoTitle = info.videoDetails.title;
+
+  // Adjust title to store as string
+  // If title has double quotes in it, remove them
+  if (videoTitle.includes('"')) {
+    videoTitle = videoTitle.replace(/"/g, '');
+  }
+  // If title has single quotes in it, remove them
+  if (videoTitle.includes("'")) {
+    videoTitle = videoTitle.replace(/'/g, '');
+  }
+  // If title has slashes in it, replace them with dashes
+  if (videoTitle.includes('/')) {
+    videoTitle = videoTitle.replace(/\//g, '-');
+  }
+
+  // Download audio
+  ytdl(songURL, {filter: 'audioonly'})
+    .pipe(fs.createWriteStream(`downloads/audio/${videoTitle}.${audioFormat}`));
+  
+  // Download video
+  ytdl(songURL)
+    .pipe(fs.createWriteStream(`downloads/videos/${videoTitle}.${videoFormat}`));
 }
 
 const run = async () => {
@@ -123,7 +165,7 @@ const run = async () => {
   for (let i = 0; i < items.length; i++) {
     let item = items[i];
     console.log('item', item)
-    await downloadAudio(item.url);
+    await download(item.url);
   }
 
   // Save extracted items to json file 
@@ -134,54 +176,6 @@ const run = async () => {
 
   // Turn off the browser to clean up after ourselves.
   await browser.close();
-}
-
-
-async function downloadAudio(songURL) {
-  let info;
-
-  // Get video info
-  try {
-    info = await ytdl.getInfo(songURL);
-    console.log('info', info)
-  } catch { }
-
-  // Save info to json file
-  //fs.writeFileSync('./info.json', JSON.stringify(info, null, 2));
-
-  // Get all available formats
-  //let formatsAvailable = info.formats.map(format => format.container);
-
-  // Filter audio formats
-  let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-  let audioFormatsAvailable = audioFormats.map(format => format.container);
-  console.log('audioFormatsAvailable', audioFormatsAvailable)
-
-  // Get the highest quality audio format
-  let videoFormat = audioFormatsAvailable[0];
-
-  // Get video title
-  let videoTitle = info.videoDetails.title;
-
-  // If title has double quotes in it, remove them
-  if (videoTitle.includes('"')) {
-    videoTitle = videoTitle.replace(/"/g, '');
-  }
-  // If title has single quotes in it, remove them
-  if (videoTitle.includes("'")) {
-    videoTitle = videoTitle.replace(/'/g, '');
-  }
-  // If title has slashes in it, remove them
-  if (videoTitle.includes('/')) {
-    videoTitle = videoTitle.replace(/\//g, '-');
-  }
-
-  // If url exists download audio
-  if (info){
-    console.log('Downloading audio...')
-    ytdl(songURL, {filter: 'audioonly'})
-      .pipe(fs.createWriteStream(`downloads/mp3s/${videoTitle}.${videoFormat}`));
-  }
 }
 
 run()
