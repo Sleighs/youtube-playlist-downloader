@@ -2,7 +2,7 @@
 
 A node.js web scraper that retrieves the information of each track in a youtube playlist and downloads each track using puppeteer and ytdl-core.
 
-## Instrutions
+## Instructions
 
 1. Make sure you have FFmpeg installed
 
