@@ -2,8 +2,8 @@ const fs = require("fs");
 const puppeteer = require("puppeteer");
 const ytdl = require('ytdl-core')
 
-// Insert public or unlisted playlist URL here
-const playlistURL = 'https://www.youtube.com/playlist?list=PL8xvCGHIJPU8RtRg1jdKg6moH7R1abaMF'
+// Enter playlist URL here
+const playlistURL = 'https://www.youtube.com/playlist?list=PL8xvCGHIJPU8rXg0qSBunJIaK_UPjiP-L'//'https://www.youtube.com/playlist?list=PL8xvCGHIJPU8RtRg1jdKg6moH7R1abaMF'
 
 const setupBrowser = async () => {
   const browser = await puppeteer.launch({ headless: false });

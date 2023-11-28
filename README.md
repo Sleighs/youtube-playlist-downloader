@@ -1,6 +1,6 @@
 # Youtube Playlist Downloader
 
-A node.js web scraper that retrieves the information of each track in a youtube playlist and downloads each track using puppeteer and ytdl-core.
+A node.js web scraper that retrieves the information of each track in a public or unlisted youtube playlist and downloads each track using puppeteer and ytdl-core.
 
 ## Instructions
 
