@@ -2,8 +2,8 @@ const fs = require("fs");
 const puppeteer = require("puppeteer");
 const ytdl = require('ytdl-core')
 
-// Enter playlist URL here
-const playlistURL = 'https://www.youtube.com/playlist?list=PL8xvCGHIJPU8rXg0qSBunJIaK_UPjiP-L'//'https://www.youtube.com/playlist?list=PL8xvCGHIJPU8RtRg1jdKg6moH7R1abaMF'
+// Enter playlist URL here and run 'node main.js' to download playlist
+const playlistURL = 'https://www.youtube.com/playlist?list=PL8xvCGHIJPU8RtRg1jdKg6moH7R1abaMF'
 
 const setupBrowser = async () => {
   const browser = await puppeteer.launch({ headless: false });
@@ -122,7 +122,7 @@ const download = async (songURL) => {
   // Get video title
   let videoTitle = info.videoDetails.title;
 
-  // Adjust title to store as string
+  // Adjust title to store as string and make viable file names
   // If title has double quotes in it, remove them
   if (videoTitle.includes('"')) {
     videoTitle = videoTitle.replace(/"/g, '');
@@ -134,6 +134,10 @@ const download = async (songURL) => {
   // If title has slashes in it, replace them with dashes
   if (videoTitle.includes('/')) {
     videoTitle = videoTitle.replace(/\//g, '-');
+  }
+  // If title has question marks in it, remove them
+  if (videoTitle.includes('?')) {
+    videoTitle = videoTitle.replace(/\?/g, '');
   }
 
   // Download audio
